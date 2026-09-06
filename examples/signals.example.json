@@ -1,0 +1,33 @@
+[
+  {
+    "schema_version": "0.1.0",
+    "signal_id": "sig_000001",
+    "generated_at": "2026-06-30T20:41:00Z",
+    "window": { "from": "2026-06-01T15:12:00Z", "to": "2026-06-30T20:41:00Z" },
+    "subject": { "ref": "p_f5ff61d7b533cd7371f120b7" },
+    "class": "isolation",
+    "severity": "high",
+    "confidence": 0.9,
+    "analyzer": { "id": "reference-heuristics", "version": "0.1.0", "method": "heuristic" },
+    "evidence": ["o_00000412", "o_00000587", "o_00000931"],
+    "rationale": "Usually played with about 1.7 others per session, then about 0.0 in the second half of the period.",
+    "disposition": "surface",
+    "expires_at": "2026-07-30T00:00:00Z"
+  },
+  {
+    "schema_version": "0.1.0",
+    "signal_id": "sig_000003",
+    "generated_at": "2026-06-30T20:41:00Z",
+    "window": { "from": "2026-06-01T15:12:00Z", "to": "2026-06-30T20:41:00Z" },
+    "subject": { "ref": "p_d7a0cee7b61eb0e3e4776e24" },
+    "counterparties": [ { "ref": "p_8d8ea3758174b90cba327262" } ],
+    "class": "asymmetric_attention",
+    "severity": "high",
+    "confidence": 0.9,
+    "analyzer": { "id": "reference-heuristics", "version": "0.1.0", "method": "heuristic" },
+    "evidence": ["o_00001204", "o_00001250", "o_00001318"],
+    "rationale": "Followed or gave to the same participant 69 time(s) with 0 in return.",
+    "disposition": "surface",
+    "expires_at": "2026-07-30T00:00:00Z"
+  }
+]

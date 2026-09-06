@@ -1,0 +1,7 @@
+synthetic.ndjson
+*.answers.json
+signals.ndjson
+__pycache__/
+*.pyc
+.venv/
+word/

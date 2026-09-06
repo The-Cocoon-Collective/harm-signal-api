@@ -1,0 +1,150 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cocoon-collective.org/schema/harm-signal/observation/0.1.0",
+  "title": "Observation",
+  "description": "One thing that happened, as recorded by a platform. An observation is a FACT and carries no interpretation. Anything that concludes something belongs in a Signal.",
+  "type": "object",
+  "required": ["schema_version", "observation_id", "occurred_at", "source", "type", "actor"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": "0.1.0" },
+
+    "observation_id": {
+      "type": "string",
+      "description": "Stable unique id. Signals cite these as evidence.",
+      "minLength": 1, "maxLength": 128
+    },
+
+    "occurred_at": {
+      "type": "string", "format": "date-time",
+      "description": "When it happened, UTC. Not when it was written."
+    },
+    "recorded_at": {
+      "type": "string", "format": "date-time",
+      "description": "When the emitter wrote it. Present when it differs materially from occurred_at."
+    },
+
+    "source": {
+      "type": "object",
+      "description": "Who emitted this. Lets one store hold several platforms, and lets an analyzer weight them differently.",
+      "required": ["platform", "emitter"],
+      "additionalProperties": false,
+      "properties": {
+        "platform":        { "type": "string", "maxLength": 64 },
+        "emitter":         { "type": "string", "maxLength": 64 },
+        "emitter_version": { "type": "string", "maxLength": 32 },
+        "instance":        { "type": "string", "maxLength": 64,
+                             "description": "Which server/shard/tenant. Opaque." }
+      }
+    },
+
+    "actor": { "$ref": "#/$defs/subject" },
+    "target": {
+      "$ref": "#/$defs/subject",
+      "description": "The other party, when the event has one."
+    },
+
+    "co_present": {
+      "type": "array",
+      "maxItems": 256,
+      "items": { "$ref": "#/$defs/subject" },
+      "description": "Everyone else in scope AT THE MOMENT OF WRITING. This cannot be reconstructed later from separate streams with any confidence, which is why it is on the record and not derived."
+    },
+
+    "space": {
+      "type": "object",
+      "description": "Where. Deliberately abstract: a room, a channel, a world, a table.",
+      "additionalProperties": false,
+      "properties": {
+        "space_id":   { "type": "string", "maxLength": 128 },
+        "space_kind": { "type": "string", "maxLength": 64,
+                        "examples": ["private", "shared", "public", "transit"] },
+        "region":     { "type": "string", "maxLength": 128,
+                        "description": "Sub-area within the space. Opaque to the schema." }
+      }
+    },
+
+    "session_id": {
+      "type": "string", "maxLength": 128,
+      "description": "Groups observations from one continuous period of activity."
+    },
+
+    "type": { "$ref": "#/$defs/observation_type" },
+
+    "attributes": {
+      "type": "object",
+      "description": "Type-specific detail. Numbers, enums, durations, counts. NEVER free text authored by a person.",
+      "propertyNames": { "maxLength": 64 }
+    },
+
+    "content_ref": {
+      "type": "string", "maxLength": 256,
+      "description": "Opaque pointer to authored content held elsewhere, under the emitter's own controls. THE CONTENT ITSELF IS NEVER IN THIS STREAM."
+    }
+  },
+
+  "$defs": {
+    "subject": {
+      "type": "object",
+      "description": "A participant, pseudonymously. There is deliberately no field for a name, an account id, an email or an address - the schema cannot express a real identity, so an emitter cannot leak one through it by accident.",
+      "required": ["ref"],
+      "additionalProperties": false,
+      "properties": {
+        "ref": {
+          "type": "string",
+          "minLength": 8, "maxLength": 128,
+          "description": "Pseudonymous, stable within a platform, meaningless outside it. Resolving it to a person requires a mapping the emitter holds and never publishes."
+        },
+        "cohort": {
+          "type": "string", "maxLength": 32,
+          "description": "Coarse band the analyzer may legitimately condition on, e.g. an age band or tenure bucket. Coarse enough not to identify."
+        },
+        "tenure_days": {
+          "type": "integer", "minimum": 0,
+          "description": "How long they have been on the platform. A newcomer with no edges behaves differently from an established participant."
+        }
+      }
+    },
+
+    "observation_type": {
+      "type": "string",
+      "description": "The event vocabulary. Overwhelmingly NON-VERBAL by design - in the cohort this was built for, most participants barely type, and what they DO is both the larger stream and the better signal.",
+      "enum": [
+        "session.begin",
+        "session.end",
+
+        "presence.enter",
+        "presence.leave",
+        "presence.dwell",
+
+        "proximity.copresence",
+        "proximity.follow",
+        "proximity.avoid",
+
+        "interaction.direct",
+        "interaction.assist",
+        "interaction.obstruct",
+        "interaction.exchange",
+
+        "affiliation.form",
+        "affiliation.join",
+        "affiliation.leave",
+        "affiliation.remove",
+        "affiliation.invite",
+        "affiliation.decline",
+
+        "artifact.create",
+        "artifact.modify",
+        "artifact.destroy",
+
+        "transfer.value",
+
+        "communication.utterance",
+        "communication.direct",
+
+        "moderation.action",
+        "moderation.report"
+      ]
+    }
+  }
+}

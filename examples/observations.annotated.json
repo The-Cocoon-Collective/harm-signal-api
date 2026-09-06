@@ -1,0 +1,186 @@
+[
+  {
+    "schema_version": "0.1.0",
+    "observation_id": "o_00000144",
+    "occurred_at": "2026-06-01T15:19:00Z",
+    "source": {
+      "platform": "synthetic",
+      "emitter": "hsa-synth",
+      "emitter_version": "0.1.0",
+      "instance": "synth-1"
+    },
+    "type": "session.begin",
+    "actor": {
+      "ref": "p_cedde4de2ccbc3f029319987",
+      "cohort": "6-8",
+      "tenure_days": 249
+    },
+    "session_id": "s_000_319987",
+    "attributes": {
+      "planned_minutes": 75
+    }
+  },
+  {
+    "schema_version": "0.1.0",
+    "observation_id": "o_00000145",
+    "occurred_at": "2026-06-01T15:19:00Z",
+    "source": {
+      "platform": "synthetic",
+      "emitter": "hsa-synth",
+      "emitter_version": "0.1.0",
+      "instance": "synth-1"
+    },
+    "type": "presence.enter",
+    "actor": {
+      "ref": "p_cedde4de2ccbc3f029319987",
+      "cohort": "6-8",
+      "tenure_days": 249
+    },
+    "co_present": [
+      {
+        "ref": "p_3a8d95ad0964383bbfea4c8a",
+        "cohort": "6-8",
+        "tenure_days": 426
+      }
+    ],
+    "space": {
+      "space_id": "hub.plaza",
+      "space_kind": "public"
+    },
+    "session_id": "s_000_319987"
+  },
+  {
+    "schema_version": "0.1.0",
+    "observation_id": "o_00000146",
+    "occurred_at": "2026-06-01T15:19:30Z",
+    "source": {
+      "platform": "synthetic",
+      "emitter": "hsa-synth",
+      "emitter_version": "0.1.0",
+      "instance": "synth-1"
+    },
+    "type": "proximity.copresence",
+    "actor": {
+      "ref": "p_cedde4de2ccbc3f029319987",
+      "cohort": "6-8",
+      "tenure_days": 249
+    },
+    "target": {
+      "ref": "p_3a8d95ad0964383bbfea4c8a",
+      "cohort": "6-8",
+      "tenure_days": 426
+    },
+    "space": {
+      "space_id": "hub.plaza",
+      "space_kind": "public"
+    },
+    "session_id": "s_000_319987",
+    "attributes": {
+      "duration_seconds": 420
+    }
+  },
+  {
+    "schema_version": "0.1.0",
+    "observation_id": "o_00000156",
+    "occurred_at": "2026-06-01T16:00:00Z",
+    "source": {
+      "platform": "synthetic",
+      "emitter": "hsa-synth",
+      "emitter_version": "0.1.0",
+      "instance": "synth-1"
+    },
+    "type": "interaction.assist",
+    "actor": {
+      "ref": "p_cedde4de2ccbc3f029319987",
+      "cohort": "6-8",
+      "tenure_days": 249
+    },
+    "target": {
+      "ref": "p_3a8d95ad0964383bbfea4c8a",
+      "cohort": "6-8",
+      "tenure_days": 426
+    },
+    "space": {
+      "space_id": "arena.a",
+      "space_kind": "shared"
+    },
+    "session_id": "s_000_319987"
+  },
+  {
+    "schema_version": "0.1.0",
+    "observation_id": "o_00000055",
+    "occurred_at": "2026-06-01T17:12:00Z",
+    "source": {
+      "platform": "synthetic",
+      "emitter": "hsa-synth",
+      "emitter_version": "0.1.0",
+      "instance": "synth-1"
+    },
+    "type": "interaction.exchange",
+    "actor": {
+      "ref": "p_f5d8bf0f3ef977e20cbf2f26",
+      "cohort": "6-8",
+      "tenure_days": 353
+    },
+    "target": {
+      "ref": "p_72f0971645661f340a185d01",
+      "cohort": "6-8",
+      "tenure_days": 10
+    },
+    "space": {
+      "space_id": "island.visit",
+      "space_kind": "shared"
+    },
+    "session_id": "s_000_bf2f26",
+    "attributes": {
+      "items": 3
+    }
+  },
+  {
+    "schema_version": "0.1.0",
+    "observation_id": "o_00000750",
+    "occurred_at": "2026-06-01T15:40:00Z",
+    "source": {
+      "platform": "synthetic",
+      "emitter": "hsa-synth",
+      "emitter_version": "0.1.0",
+      "instance": "synth-1"
+    },
+    "type": "artifact.create",
+    "actor": {
+      "ref": "p_aa4a0f903721f005458c2ec0",
+      "cohort": "6-8",
+      "tenure_days": 157
+    },
+    "space": {
+      "space_id": "hub.hall",
+      "space_kind": "shared"
+    },
+    "session_id": "s_000_8c2ec0",
+    "attributes": {
+      "blocks": 247
+    }
+  },
+  {
+    "schema_version": "0.1.0",
+    "observation_id": "o_00000299",
+    "occurred_at": "2026-06-01T16:16:00Z",
+    "source": {
+      "platform": "synthetic",
+      "emitter": "hsa-synth",
+      "emitter_version": "0.1.0",
+      "instance": "synth-1"
+    },
+    "type": "session.end",
+    "actor": {
+      "ref": "p_72f0971645661f340a185d01",
+      "cohort": "6-8",
+      "tenure_days": 10
+    },
+    "session_id": "s_000_185d01",
+    "attributes": {
+      "actual_minutes": 32,
+      "distinct_companions": 1
+    }
+  }
+]

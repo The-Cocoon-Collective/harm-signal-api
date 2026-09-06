@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cocoon-collective.org/schema/harm-signal/signal/0.1.0",
+  "title": "Signal",
+  "description": "Something an analyzer concluded from observations. A signal is an OPINION and must never be stored in the observation stream. This is the only thing a reporting layer such as a guardian dashboard is expected to consume.",
+  "type": "object",
+  "required": ["schema_version", "signal_id", "generated_at", "window", "subject", "class", "confidence", "analyzer", "evidence", "rationale"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": "0.1.0" },
+    "signal_id":      { "type": "string", "minLength": 1, "maxLength": 128 },
+    "generated_at":   { "type": "string", "format": "date-time" },
+
+    "window": {
+      "type": "object",
+      "description": "The period the conclusion is about. A signal without a window cannot be checked or expired.",
+      "required": ["from", "to"],
+      "additionalProperties": false,
+      "properties": {
+        "from": { "type": "string", "format": "date-time" },
+        "to":   { "type": "string", "format": "date-time" }
+      }
+    },
+
+    "subject": {
+      "type": "object",
+      "required": ["ref"],
+      "additionalProperties": false,
+      "properties": {
+        "ref": { "type": "string", "minLength": 8, "maxLength": 128 }
+      },
+      "description": "Who the signal is about, pseudonymously. Same ref space as observations."
+    },
+
+    "counterparties": {
+      "type": "array", "maxItems": 64,
+      "items": { "type": "object", "required": ["ref"], "additionalProperties": false,
+                 "properties": { "ref": { "type": "string", "minLength": 8, "maxLength": 128 } } },
+      "description": "Others the signal implicates. Naming a second child to a first child's guardian is a disclosure decision the reporting layer must make deliberately - the schema surfaces it rather than hiding it."
+    },
+
+    "class": { "$ref": "#/$defs/signal_class" },
+
+    "severity": {
+      "type": "string",
+      "enum": ["informational", "low", "moderate", "high"],
+      "description": "How much this matters if true. Separate from confidence on purpose: a high-severity, low-confidence signal is a common and dangerous shape."
+    },
+    "confidence": {
+      "type": "number", "minimum": 0, "maximum": 1,
+      "description": "How sure the analyzer is. Explicit so a consumer can threshold rather than guess."
+    },
+
+    "analyzer": {
+      "type": "object",
+      "required": ["id", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "id":      { "type": "string", "maxLength": 64 },
+        "version": { "type": "string", "maxLength": 32 },
+        "method":  { "type": "string", "maxLength": 64,
+                     "examples": ["heuristic", "statistical", "graph", "model"] }
+      },
+      "description": "Provenance. When a signal turns out to be wrong you must be able to say which analyzer, which version, produced it."
+    },
+
+    "evidence": {
+      "type": "array",
+      "minItems": 1, "maxItems": 512,
+      "items": { "type": "string", "maxLength": 128 },
+      "description": "observation_id values this conclusion rests on. A signal with no citable evidence is an assertion, and this schema does not carry assertions."
+    },
+
+    "rationale": {
+      "type": "string",
+      "minLength": 1, "maxLength": 512,
+      "description": "Plain language, written for the person who will read it. 'Played alone for four sessions after usually playing in a group of three.' If it cannot be said plainly it should not be raised."
+    },
+
+    "disposition": {
+      "type": "string",
+      "enum": ["observe", "surface", "notify_guardian", "escalate"],
+      "description": "What the analyzer suggests. ADVISORY ONLY - the acting platform decides. Nothing consuming this schema is granted authority over a participant."
+    },
+
+    "expires_at": {
+      "type": "string", "format": "date-time",
+      "description": "Signals go stale. One with no expiry becomes a permanent mark on a child, which is the failure mode this field exists to prevent."
+    }
+  },
+
+  "$defs": {
+    "signal_class": {
+      "type": "string",
+      "description": "What KIND of concern. Deliberately behavioural and domain-neutral - none of these names a harm, they name a SHAPE, and a shape can be checked.",
+      "enum": [
+        "isolation",
+        "withdrawal",
+        "exclusion",
+        "asymmetric_attention",
+        "novel_contact",
+        "contact_escalation",
+        "boundary_probe",
+        "reciprocity_imbalance",
+        "value_imbalance",
+        "schedule_anomaly",
+        "behavioural_drift",
+        "cohort_atypical",
+        "content_flag",
+        "off_platform_indicator"
+      ]
+    }
+  }
+}
