@@ -1,0 +1,15 @@
+harm-signal-api
+Copyright (c) 2026 MJD Entertainment, d/b/a The Cocoon Collective(tm)
+
+This product includes software developed by MJD Entertainment,
+d/b/a The Cocoon Collective(tm) (https://cocoon-collective.org).
+
+The schema and specification (schema/, SPEC.md, examples/) are licensed under the
+Apache License, Version 2.0. See LICENSES/Apache-2.0.txt.
+
+The implementation (tools/, analyzers/, reference/) is licensed under the GNU Affero
+General Public License, version 3 or later. See LICENSES/AGPL-3.0.txt.
+
+"The Cocoon Collective" and "harm-signal-api" are trademarks of MJD Entertainment,
+d/b/a The Cocoon Collective(tm), and are not licensed under either of the above.
+See TRADEMARKS.md.

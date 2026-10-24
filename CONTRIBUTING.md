@@ -56,3 +56,10 @@ project can exist in the open at all.
   declined.
 - Analyzers must cite evidence and state a plain-language rationale. Both are required by the
   schema and both are load-bearing.
+
+
+## Terms
+
+Contributions are made under the terms in [CLA.md](CLA.md): **you keep your copyright**, and you grant this project the licence it needs to stay relicensable and defensible. Sign off your commits with `git commit -s`. Licensing of the code itself is explained in [LICENSING.md](LICENSING.md).
+
+**Never open a pull request containing real data.** Use `tools/synth.py`. That rule has no exceptions.

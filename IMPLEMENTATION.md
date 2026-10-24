@@ -7,7 +7,7 @@ adopt this, **you do not have to design a database. It is in
 
 The reference emitter is **CocoonMinis**, the server plugin behind
 [The Cocoon Collective](https://github.com/The-Cocoon-Collective) — a Minecraft world for
-six-to-twelve-year-olds. Nothing below is Minecraft-shaped in a way that matters. A forum, a
+six- and seven-year-olds. Nothing below is Minecraft-shaped in a way that matters. A forum, a
 classroom tool or a voice platform fills the same nine tables with different verbs.
 
 ---
@@ -38,7 +38,7 @@ If you take one thing from this repository, take that column.
 
 ---
 
-## 2. Nine tables, twenty-six observation types
+## 2. Nine tables, twenty-eight observation types
 
 | table | types it carries | what it is for |
 |---|---|---|
@@ -49,15 +49,21 @@ If you take one thing from this repository, take that column.
 | `affiliation_events` | `affiliation.form` `join` `leave` `remove` `invite` `decline` | groups forming, and people being put out of them |
 | `artifact_events` | `artifact.create` `modify` `destroy` | what they made, and what got broken |
 | `transfer_events` | `transfer.value` | economy, gifts, and sustained one-way giving |
-| `chat_events` | `communication.utterance` `communication.direct` | that something was said — and, separately, what |
-| `moderation_events` | `moderation.action` `moderation.report` | the platform's own interventions |
+| `chat_events` | `communication.utterance` `communication.direct` `communication.voice` | that something was said, or that a voice channel was shared — never what was said in it |
+| `moderation_events` | `moderation.action` `moderation.report` `moderation.repair` | the platform's own interventions, including the ones that put something right |
 
 Plus `watcher_meta`, a two-column key/value table holding the schema version, so an operator
 can ask the database what it thinks it is without reading any code.
 
-**Twenty-four of the twenty-six types are non-verbal.** That ratio is the design claim.
-Content moderation looks at the two that are words. This schema is built for the other
-twenty-four.
+**Twenty-five of the twenty-eight types carry no communication at all, and the three that
+do carry no content.** That ratio is the design claim. Keyword moderation can read exactly
+one of the twenty-eight — `communication.utterance`, the typed one. This schema is built for
+the other twenty-seven.
+
+`communication.voice` and `moderation.repair` were added in 0.2.0 and need no new table:
+`event_type` is a `VARCHAR` in both, and the additive migrations at the foot of
+`reference/watcher-schema.sql` add the three columns voice needs. **No emitter writes either
+type yet** — they are defined ahead of the features they describe, on purpose.
 
 ### The four rows that matter most, and why
 

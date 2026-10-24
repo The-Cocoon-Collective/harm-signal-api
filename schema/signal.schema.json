@@ -1,13 +1,13 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://cocoon-collective.org/schema/harm-signal/signal/0.1.0",
+  "$id": "https://cocoon-collective.org/schema/harm-signal/signal/0.2.0",
   "title": "Signal",
   "description": "Something an analyzer concluded from observations. A signal is an OPINION and must never be stored in the observation stream. This is the only thing a reporting layer such as a guardian dashboard is expected to consume.",
   "type": "object",
   "required": ["schema_version", "signal_id", "generated_at", "window", "subject", "class", "confidence", "analyzer", "evidence", "rationale"],
   "additionalProperties": false,
   "properties": {
-    "schema_version": { "const": "0.1.0" },
+    "schema_version": { "const": "0.2.0" },
     "signal_id":      { "type": "string", "minLength": 1, "maxLength": 128 },
     "generated_at":   { "type": "string", "format": "date-time" },
 
@@ -79,8 +79,8 @@
 
     "disposition": {
       "type": "string",
-      "enum": ["observe", "surface", "notify_guardian", "escalate"],
-      "description": "What the analyzer suggests. ADVISORY ONLY - the acting platform decides. Nothing consuming this schema is granted authority over a participant."
+      "enum": ["observe", "repair", "surface", "notify_guardian", "escalate"],
+      "description": "What the analyzer suggests. ADVISORY ONLY - the acting platform decides. Nothing consuming this schema is granted authority over a participant. 'repair' is deliberately listed before the escalating options: it proposes that something be PUT RIGHT between the participants - an apology offered, a thing returned, an exclusion undone - rather than that anyone be reported or removed. A vocabulary whose only verbs are report and remove teaches a platform to punish, because those are the only words it has."
     },
 
     "expires_at": {

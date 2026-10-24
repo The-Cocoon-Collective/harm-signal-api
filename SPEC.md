@@ -1,4 +1,4 @@
-# harm-signal-api — specification, draft 0.1.0
+# harm-signal-api — specification, draft 0.2.0
 
 Reasoning, the vocabulary, and what is still open. The normative artifacts are the two JSON
 Schema files; where this document and a schema disagree, the schema wins.
@@ -35,7 +35,7 @@ interpretation. See `schema/observation.schema.json`.
 ### 2.1 Subjects are pseudonymous by construction
 
 ```json
-{ "ref": "p_8d8ea3758174b90cba327262", "cohort": "6-8", "tenure_days": 412 }
+{ "ref": "p_8d8ea3758174b90cba327262", "cohort": "6-7", "tenure_days": 412 }
 ```
 
 `ref` is opaque and stable within one platform. Resolving it to a person requires a mapping
@@ -169,8 +169,9 @@ synthetic data carries further here than it usually does, and the honest boundar
 
 ## 6. Open questions — where help is most wanted
 
-1. **Are the twenty-six event types the right ones?** They came from one game. What is
-   missing for a forum, a classroom tool, a voice platform?
+1. **Are the twenty-eight event types the right ones?** They came from one game. What is
+   missing for a forum, a classroom tool, a moderated marketplace? `communication.voice`
+   was added in 0.2.0 and is the newest and least tested part of the vocabulary.
 2. **`proximity.avoid` is hard to emit.** Deliberate avoidance versus coincidence is a
    platform-side judgement with no obvious general definition. Is it one field, or several?
 3. **Windowing.** Signals take a window; nothing says how to choose it. A four-session
@@ -196,4 +197,134 @@ Adjacent, all necessary, none of them this.
 `schema_version` is required on every record. Additive changes bump the minor version;
 removing or re-typing a field bumps the major. Emitters and analyzers state which they speak.
 
-Draft 0.1.0. Nothing here has been run against a live deployment yet.
+Draft 0.2.0. Nothing here has been run against a live deployment yet.
+
+
+---
+
+## 9. Voice, and why it is in the vocabulary (0.2.0)
+
+The platform this was built for asks families for a headset and a microphone, and intends to
+give children no way to talk to anyone who is not already in the game with them. In-platform
+voice is not built there yet; the vocabulary is being defined before it is, deliberately.
+That is a safety decision about *where* conversation can happen, and it has a consequence for
+this schema that took a while to see: **on a platform where children talk, the text stream is
+not a small part of the record. It is close to none of it.**
+
+A six-year-old can talk fluently and cannot type a sentence at speed. So the conversation
+that matters is voice, and voice is the one channel a keyword filter cannot read.
+
+`communication.voice` records that a voice channel was shared: by whom, with whom, where,
+for how long, and how much of that time the actor was speaking. It carries:
+
+```json
+{ "type": "communication.voice",
+  "attributes": { "talk_seconds": 240, "channel_size": 3, "turns": 14,
+                  "longest_turn_seconds": 38, "median_gap_seconds": 2,
+                  "audio_retained": true, "transcript_retained": true } }
+```
+
+It does not carry, and the schema cannot express: a transcript, a summary, a sentiment, a
+classification, or a pointer to a recording.
+
+### What the attributes are actually for
+
+The three timing attributes are the point of the type, and they are not decoration.
+
+**The same words carry opposite meanings depending on how they are said.** A sentence
+delivered evenly is a remark; the same sentence delivered in rapid fire, one turn on top of
+another, over a participant who has stopped answering, is something else entirely. A
+transcript cannot tell those apart. `turns`, `longest_turn_seconds` and `median_gap_seconds`
+can, and they do it **without carrying a single word**.
+
+An analyzer reading this type should be able to raise: *one participant held the floor for
+most of a session, in short rapid turns, while the other stopped taking any* — a shape that
+is visible in the rhythm alone.
+
+### The two retention flags, and why both exist
+
+`audio_retained` and `transcript_retained` are declarations about the **emitting platform's
+own store**, not about this schema. Neither the audio nor the words ever enter an observation.
+
+They exist because a consumer is entitled to know what stands behind a signal, and because a
+platform that keeps recordings of children should have to say so in the same record that
+carries its conclusions rather than in a policy document nobody reads. There is no honest
+default: a platform that keeps nothing sets both false; a platform that keeps audio while it is
+still relevant to an open question, and text for longer, sets both true and should expect to
+be asked how long, and who can ask for it to be deleted.
+
+The distinction is worth stating plainly because the industry routinely blurs it:
+
+| | what it needs | what it leaves behind |
+|---|---|---|
+| **monitoring** | who was in a channel, with whom, for how long | structure — this schema's ordinary business |
+| **moderating** | the content of what was said | a judgement, and a choice about whether to keep the words |
+
+A platform can monitor without ever processing speech. It cannot moderate speech without
+processing speech. Anyone who tells you otherwise is monitoring and calling it moderation.
+
+The design claim survives this addition, and arguably gets stronger. Who chose to be in a
+channel with whom, for how long, night after night, and who never gets invited into one, is
+**structure** — and structure is what this schema was built to carry. A platform that can
+only moderate what it can read is, on this cohort, moderating almost nothing.
+
+## 10. Anonymisation, retention, and what may be published
+
+Full treatment in [PRIVACY.md](PRIVACY.md). The normative parts:
+
+- A `ref` is **pseudonymous**, not anonymous, at every version of this schema. No
+  implementation may describe a stream in this format as anonymous data.
+- Refs SHOULD be derived per epoch under a key that is destroyed when the epoch closes.
+  Cross-epoch linkage is then impossible rather than merely prohibited.
+- Signals MUST cite evidence and MUST expire, so that a deletion request can be unwound
+  through anything derived from the deleted records.
+- Nothing row-level about real participants is published by this project, in any processed
+  form. What may be published is differentially private aggregate statistics and a
+  **fitted generator** (`tools/fit.py` → `tools/synth.py`) — the parameters of the world,
+  not the people in it.
+
+## 11. Licensing
+
+Two licences, one rule each: the standard is Apache-2.0 so anyone may implement it, and the
+implementation is AGPL-3.0-or-later so improvements to it stay in the open. The name is a
+trademark and conformance is a testable claim, not a badge. See
+[LICENSING.md](LICENSING.md) and [TRADEMARKS.md](TRADEMARKS.md).
+
+
+## 12. Repair, and why `disposition` has a verb that is not punishment
+
+Version 0.2.0 adds `moderation.repair` to the observation vocabulary and `repair` to a
+signal's `disposition`, positioned deliberately **before** the escalating options.
+
+Most safety vocabularies can only say *report*, *suspend*, *remove*. A system whose only
+verbs are punitive teaches the platform running it to punish, because those are the only
+words it has — and on a platform of six- and seven-year-olds, punishment is almost always the
+wrong first move. A child who excluded someone on Tuesday is not a threat to be removed. They
+are a child who did a thing children do, and who can be walked through putting it right.
+
+So the vocabulary carries the restorative move as a first-class outcome:
+
+- `disposition: "repair"` on a signal proposes that something be **put right between the
+  participants** — an apology offered, a thing returned, an exclusion undone — rather than
+  that anybody be reported or removed.
+- `moderation.repair` records that a repair was attempted, with `repair_kind` and
+  `repair_accepted`, so a platform can answer the question nobody in this field can currently
+  answer: **does restoration actually work, and for whom, and how often does it hold?**
+
+That last point is the research argument for the type existing at all. Restorative practice
+is well established in schools and barely measured online, precisely because platforms record
+punishments and not repairs. A platform that records both can compare them. This schema makes
+that possible without recording a single word anybody said.
+
+Escalation still exists. `surface`, `notify_guardian` and `escalate` are all still there, and
+some conduct goes straight to them. The claim is only about **order**: repair is listed first
+because it should be reached for first, and a schema's field order is a design argument
+whether or not anyone admits it.
+
+The joint between the two ladders — repair on one side, warnings and removal on the other —
+is a safeguarding judgement, not a technical one. The position taken here is that **the
+punitive ladder begins where repair is refused, or where the conduct was never a repairable
+mistake**, and that a platform should have to record which of those two it was. We would like
+practitioners to argue with that, and the schema is built so they can: `repair_accepted` and
+the disposition on the signal that preceded it are both on the record, so "we tried repair
+first" is a checkable claim rather than a policy sentence.

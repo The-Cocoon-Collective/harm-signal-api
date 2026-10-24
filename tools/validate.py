@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: AGPL-3.0-or-later
 """
 Validate an NDJSON stream against the observation or signal schema.
 
@@ -24,7 +25,8 @@ def main():
     try:
         from jsonschema import Draft202012Validator
     except ImportError:
-        print("needs jsonschema:  pip install jsonschema", file=sys.stderr)
+        print("needs jsonschema 4.18 or newer (draft 2020-12 support):\n"
+              "    pip install 'jsonschema>=4.18'", file=sys.stderr)
         return 2
 
     validator = Draft202012Validator(load_schema(a.schema))

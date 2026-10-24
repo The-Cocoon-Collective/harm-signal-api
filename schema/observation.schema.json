@@ -1,13 +1,13 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://cocoon-collective.org/schema/harm-signal/observation/0.1.0",
+  "$id": "https://cocoon-collective.org/schema/harm-signal/observation/0.2.0",
   "title": "Observation",
   "description": "One thing that happened, as recorded by a platform. An observation is a FACT and carries no interpretation. Anything that concludes something belongs in a Signal.",
   "type": "object",
   "required": ["schema_version", "observation_id", "occurred_at", "source", "type", "actor"],
   "additionalProperties": false,
   "properties": {
-    "schema_version": { "const": "0.1.0" },
+    "schema_version": { "const": "0.2.0" },
 
     "observation_id": {
       "type": "string",
@@ -108,7 +108,7 @@
 
     "observation_type": {
       "type": "string",
-      "description": "The event vocabulary. Overwhelmingly NON-VERBAL by design - in the cohort this was built for, most participants barely type, and what they DO is both the larger stream and the better signal.",
+      "description": "The event vocabulary. Overwhelmingly NON-VERBAL by design - in the cohort this was built for, most participants barely type - they TALK - and what they do is both the larger stream and the better signal. communication.voice records that a voice channel was shared, for how long, and in what rhythm - turns, gaps, who held the floor. It never carries what was said. Whether the emitting platform keeps the audio or a transcript in its own store is declared in the attributes, never carried here.",
       "enum": [
         "session.begin",
         "session.end",
@@ -141,9 +141,11 @@
 
         "communication.utterance",
         "communication.direct",
+        "communication.voice",
 
         "moderation.action",
-        "moderation.report"
+        "moderation.report",
+        "moderation.repair"
       ]
     }
   }

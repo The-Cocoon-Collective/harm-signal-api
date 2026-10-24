@@ -5,3 +5,7 @@ __pycache__/
 *.pyc
 .venv/
 word/
+*.ndjson
+!examples/*.ndjson
+params.json
+anon.ndjson

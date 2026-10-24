@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: AGPL-3.0-or-later
 """
 Generate a synthetic observation stream in the harm-signal-api format.
 
@@ -32,10 +33,10 @@ an analyzer that has seen the answer key is measuring nothing.
 import argparse, hashlib, json, random, sys
 from datetime import datetime, timedelta, timezone
 
-SCHEMA_VERSION = "0.1.0"
+SCHEMA_VERSION = "0.2.0"
 PLATFORM = "synthetic"
 EMITTER = "hsa-synth"
-EMITTER_VERSION = "0.1.0"
+EMITTER_VERSION = "0.2.0"
 
 SPACES = [
     ("hub.plaza",     "public"),
@@ -55,8 +56,25 @@ def ref(seed: str) -> str:
 
 
 class World:
-    def __init__(self, n, days, seed, start):
+    def __init__(self, n, days, seed, start, params=None):
         self.rng = random.Random(seed)
+        # params, when given, come from tools/fit.py -- a differentially private fit to a
+        # real stream. Fitting is how a real platform's SHAPE gets published without any
+        # child's record going with it. See PRIVACY.md.
+        self.params = params or {}
+        self.cohort_pool = self._pool(self.params.get("cohorts"),
+                                      ["6-7", "6-7", "8-10", "8-10"])
+        self.hour_pool = [int(h) for h in
+                          self._pool(self.params.get("start_hour"),
+                                     [15, 16, 17, 17, 18, 19, 20])]
+        self.companion_pool = [int(c) for c in
+                               self._pool(self.params.get("companions"),
+                                          [0, 1, 1, 2, 2, 3])]
+        sm = self.params.get("session_minutes") or {}
+        self.session_mean = sm.get("mean", 55)
+        self.session_sd = sm.get("sd", 20)
+        self.text_rate = self.params.get("text_rate", 0.05)
+        self.voice_rate = self.params.get("voice_rate", 0.55)
         self.days = days
         self.start = start
         self.obs = []
@@ -64,7 +82,7 @@ class World:
 
         self.people = [ref(f"{seed}:{i}") for i in range(n)]
         self.tenure = {p: max(0, int(self.rng.gauss(220, 120))) for p in self.people}
-        self.cohort = {p: self.rng.choice(["6-8", "6-8", "6-8", "9-12"]) for p in self.people}
+        self.cohort = {p: self.rng.choice(self.cohort_pool) for p in self.people}
 
         # friendship graph: a few hubs, most with 2-5 edges
         self.friends = {p: set() for p in self.people}
@@ -84,6 +102,18 @@ class World:
 
         self.tenure[self.newcomer] = 0
         self.friends[self.newcomer] = set()
+
+    @staticmethod
+    def _pool(weights, default, size=20):
+        """Turn a fitted {value: probability} map into a sampling pool. No fit, no change --
+        the defaults below are what the generator has always used."""
+        if not weights:
+            return list(default)
+        pool = []
+        for value, prob in weights.items():
+            for _ in range(max(1, round(prob * size))):
+                pool.append(value)
+        return pool or list(default)
 
     # -- emit ---------------------------------------------------------------
     def emit(self, when, otype, actor, target=None, co=None, space=None,
@@ -135,19 +165,19 @@ class World:
     def session_minutes(self, p, day):
         if p == self.withdrawer:
             return max(5, int(60 * (1.0 - day / max(1, self.days))) + self.rng.randint(-5, 5))
-        return int(self.rng.gauss(55, 20))
+        return int(self.rng.gauss(self.session_mean, self.session_sd))
 
     def companions(self, p, day):
         """Who is around. This is where the planted shapes actually bite."""
         if p == self.isolated and day > self.days * 0.4:
             return []                                   # the group stops including them
         pool = list(self.friends[p]) or [q for q in self.people if q != p]
-        k = min(len(pool), self.rng.choice([0, 1, 1, 2, 2, 3]))
+        k = min(len(pool), self.rng.choice(self.companion_pool))
         return self.rng.sample(pool, k) if k else []
 
     def session(self, p, base, day):
         sid = f"s_{day:03d}_{p[-6:]}"
-        t = base + timedelta(hours=self.rng.choice([15, 16, 17, 17, 18, 19, 20]),
+        t = base + timedelta(hours=self.rng.choice(self.hour_pool),
                              minutes=self.rng.randint(0, 59))
         minutes = max(5, self.session_minutes(p, day))
         end = t + timedelta(minutes=minutes)
@@ -194,8 +224,24 @@ class World:
                           "artifact.create", p, space=space, session=sid,
                           attrs={"blocks": self.rng.randint(5, 400)})
 
-            # chat is deliberately rare -- this cohort barely types, and that is the point
-            chat_p = 0.05 if p != self.withdrawer else 0.05 * (1 - day / max(1, self.days))
+            # Voice is the channel this cohort actually uses. A six-year-old cannot type
+            # a sentence at speed; they can talk. So voice PRESENCE is common in the stream
+            # -- who was in a channel, with whom, for how long -- and voice CONTENT is not
+            # in the stream at all, in any form. Nothing here transcribes anybody.
+            if co and self.rng.random() < self.voice_rate:
+                talk = self.rng.randint(20, dwell * 45)
+                self.emit(cur + timedelta(minutes=1), "communication.voice", p, co=co,
+                          space=space, session=sid,
+                          attrs={"talk_seconds": talk,
+                                 "channel_size": len(co) + 1,
+                                 "turns": self.rng.randint(2, 30),
+                                 "longest_turn_seconds": self.rng.randint(2, 45),
+                                 "median_gap_seconds": self.rng.randint(1, 6),
+                                 "audio_retained": True,
+                                 "transcript_retained": True})
+
+            # typing is deliberately rare -- this cohort barely types, and that is the point
+            chat_p = self.text_rate if p != self.withdrawer else self.text_rate * (1 - day / max(1, self.days))
             if self.rng.random() < chat_p:
                 self.emit(cur + timedelta(minutes=self.rng.randint(1, dwell)),
                           "communication.utterance", p, space=space, session=sid, co=co,
@@ -221,10 +267,16 @@ def main():
     ap.add_argument("--days", type=int, default=30)
     ap.add_argument("--seed", type=int, default=7)
     ap.add_argument("--out", default="synthetic.ndjson")
+    ap.add_argument("--params", help="parameter file from tools/fit.py; "
+                                     "generates a world shaped like a real one")
     a = ap.parse_args()
 
+    params = None
+    if a.params:
+        params = json.load(open(a.params, encoding="utf-8"))
+
     start = datetime(2026, 6, 1, tzinfo=timezone.utc)
-    w = World(a.participants, a.days, a.seed, start)
+    w = World(a.participants, a.days, a.seed, start, params)
     obs = w.run()
 
     with open(a.out, "w", encoding="utf-8") as f:
@@ -244,11 +296,20 @@ def main():
     with open(a.out + ".answers.json", "w", encoding="utf-8") as f:
         json.dump(answers, f, indent=2)
 
-    verbal = sum(1 for o in obs if o["type"].startswith("communication."))
-    print(f"{len(obs):,} observations -> {a.out}")
+    text = sum(1 for o in obs if o["type"] == "communication.utterance")
+    voice = sum(1 for o in obs if o["type"] == "communication.voice")
+    n = len(obs)
+    print(f"{n:,} observations -> {a.out}")
     print(f"answer key            -> {a.out}.answers.json")
-    print(f"non-verbal            : {100*(len(obs)-verbal)/len(obs):.1f}%  "
-          f"({verbal:,} of {len(obs):,} are communication events)")
+    if params:
+        print(f"fitted params         <- {a.params} "
+              f"(epsilon {params.get('privacy', {}).get('epsilon_total')})")
+    print(f"structural            : {100*(n-text-voice)/n:.1f}%  "
+          f"-- who did what, with whom, where, in what order")
+    print(f"voice presence        : {100*voice/n:.1f}%  "
+          f"-- who was in a channel and for how long. No content, ever.")
+    print(f"typed text            : {100*text/n:.1f}%  "
+          f"({text:,} of {n:,}) -- the only part keyword moderation can see")
 
 
 if __name__ == "__main__":
